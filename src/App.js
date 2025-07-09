@@ -305,7 +305,7 @@ function App() {
       <div className="max-w-4xl mx-auto">
         <header className="text-center mb-10">
           <h1 className="text-5xl font-bold text-blue-400">WebCard Utility</h1>
-          <p className="text-gray-400 mt-2 text-lg">View and create Agent Discovery Protocol profiles.</p>
+          <p className="text-gray-400 mt-2 text-lg">View and create Agent Discovery Protocol profiles. For More information, including details about efforts to advance this technologies design and implementation via IETF & W3C, please refer to the documentation available on <a href="https://github.com/WebCivics/Webcard" className="text-blue-400 hover:underline">the documentation available on GitHub</a>.</p>
         </header>
         <div className="border-b border-gray-700 mb-8">
           <nav className="-mb-px flex justify-center space-x-4">
@@ -335,10 +335,10 @@ function App() {
         {activeTab === 'create' && <CreatorView />}
         {activeTab === 'solid' && webId && <ProfileView domain={domain} webId={webId} onReset={handleReset} />}
         <footer className="text-center mt-12 text-gray-500 text-sm">
-          Developed in React with the assistance of{' '}
+          Developed by <a href="https://webcivics.github.io/Webcard/?domain=sailingdigital.com" className="text-blue-400 hover:underline">Timothy Holborn</a>, coded in React with the assistance of{' '}
           <a href="https://x.ai/grok" className="text-blue-400 hover:underline">xAI Grok 3</a> and{' '}
           <a href="https://deepmind.google/technologies/gemini/" className="text-blue-400 hover:underline">Google Gemini 2.5 Pro</a>.{' '}
-          Source code available at{' '}
+          </br>Source code available at{' '}
           <a href="https://github.com/WebCivics/Webcard/" className="text-blue-400 hover:underline">GitHub</a>.
         </footer>
       </div>
