@@ -1,39 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import './App.css';
-import DomainForm from './components/DomainForm';
-import ProfileView from './components/ProfileView';
+import React, { useState } from 'react';
 
 /**
- * Main App Component
- * This component acts as a router. It checks the URL path on load.
- * - If the path is empty, it renders the DomainForm.
- * - If the path contains a domain, it renders the ProfileView.
+ * DomainForm Component
+ * Renders a simple form for the user to enter a domain name.
+ * On submit, it reloads the page to the corresponding path.
  */
-function App() {
-  const [domain, setDomain] = useState('');
+function DomainForm() {
+  const [inputValue, setInputValue] = useState('');
 
-  // On component mount, parse the domain from the URL path
-  useEffect(() => {
-    const path = window.location.pathname;
-    // Remove the leading slash and decode any special characters
-    const domainFromPath = decodeURIComponent(path.substring(1));
-    if (domainFromPath) {
-      setDomain(domainFromPath);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (inputValue) {
+      // Redirect the browser to the new URL to trigger the ProfileView
+      window.location.pathname = `/${encodeURIComponent(inputValue)}`;
     }
-  }, []); // Empty dependency array means this runs once on mount
+  };
 
   return (
-    <div className="bg-gray-900 min-h-screen flex flex-col items-center justify-center text-white font-sans p-4">
-      {domain ? (
-        <ProfileView domain={domain} />
-      ) : (
-        <DomainForm />
-      )}
-       <footer className="absolute bottom-4 text-gray-500 text-sm">
-        Built with the assistance of an AI assistant.
-      </footer>
+    <div className="w-full max-w-md text-center">
+      <h1 className="text-4xl font-bold mb-2">WebCard Viewer</h1>
+      <p className="text-gray-400 mb-6">Enter a domain to look up its Agent Discovery Protocol (ADP) record.</p>
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
+        <label htmlFor="domain-input" className="sr-only">Domain Name</label>
+        <input
+          id="domain-input"
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          placeholder="sailingdigital.com"
+          className="flex-grow bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          type="submit"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors"
+        >
+          Look Up
+        </button>
+      </form>
     </div>
   );
 }
 
-export default App;
+export default DomainForm;
