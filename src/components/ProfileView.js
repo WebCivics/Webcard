@@ -26,6 +26,8 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
       setSolidData(null);
       setSolidError('');
 
+      let webIdValue = null;
+
       try {
         // Step 1: Fetch DNS TXT record
         const dnsResponse = await fetch(`https://dns.google/resolve?name=_adp.${domain}&type=TXT`);
@@ -74,11 +76,14 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
               const SCHEMA = 'https://schema.org/';
               const VCARD = 'http://www.w3.org/2006/vcard/ns#';
 
+              // Debug: Log parsed quads
+              console.log('Parsed ADP Quads:', quads);
+
               // Extract key fields
               const name = store.getObjects(null, `${FOAF}name`, null)[0]?.value;
               const img = store.getObjects(null, `${FOAF}img`, null)[0]?.id;
               const eCashAddress = store.getObjects(null, `${ADP}hasEcashAccount`, null)[0]?.value;
-              const webIdValue = store.getObjects(null, `${ADP}hasWebID`, null)[0]?.id;
+              webIdValue = store.getObjects(null, `${ADP}hasWebID`, null)[0]?.id;
 
               // Set WebID for Solid tab
               if (webIdValue && setWebId) {
@@ -114,6 +119,9 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
                 source: 'ADP',
               }));
 
+              // Debug: Log extracted links
+              console.log('Extracted ADP Links:', [...links, ...genericLinks]);
+
               // Extract field value for fieldView
               let fieldValue = null;
               if (fieldView) {
@@ -143,17 +151,21 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
           });
         });
 
-        // Step 5: Fetch Solid POD data if webId exists
+        // Step 5: Fetch Solid POD data if webIdValue exists
         if (webIdValue) {
           try {
+            console.log('Fetching Solid POD:', webIdValue);
             const response = await fetch(webIdValue, {
               headers: { Accept: 'text/turtle, application/ld+json' },
+              mode: 'cors',
             });
+            console.log('Solid Response Status:', response.status, 'Content-Type:', response.headers.get('Content-Type'));
             if (!response.ok) {
-              throw new Error(`Failed to fetch Solid profile (status: ${response.status})`);
+              throw new Error(`Failed to fetch Solid profile (status: ${response.status}, ${response.statusText})`);
             }
-            const contentType = response.headers.get('Content-Type');
+            const contentType = response.headers.get('Content-Type') || '';
             let solidContent = await response.text();
+            console.log('Solid Content:', solidContent);
 
             const solidQuads = [];
             const solidParser = new N3.Parser();
@@ -163,15 +175,16 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
                   if (contentType.includes('application/ld+json')) {
                     try {
                       const jsonld = JSON.parse(solidContent);
+                      console.log('Solid JSON-LD:', jsonld);
                       const jsonldParser = new N3.Parser();
                       jsonldParser.parse(
                         `@prefix foaf: <http://xmlns.com/foaf/0.1/> .
                          @prefix vcard: <http://www.w3.org/2006/vcard/ns#> .
                          @prefix ldp: <http://www.w3.org/ns/ldp#> .
-                         <#this> foaf:name "${jsonld['foaf:name'] || ''}" ;
-                                 vcard:hasEmail "${jsonld['vcard:hasEmail'] || ''}" ;
-                                 foaf:homepage <${jsonld['foaf:homepage'] || ''}> ;
-                                 ldp:inbox <${jsonld['ldp:inbox'] || ''}> .`,
+                         <#me> foaf:name "${jsonld['foaf:name'] || ''}" ;
+                               vcard:hasEmail "${jsonld['vcard:hasEmail'] || ''}" ;
+                               foaf:homepage <${jsonld['foaf:homepage'] || ''}> ;
+                               ldp:inbox <${jsonld['ldp:inbox'] || ''}> .`,
                         (err, quad, prefixes) => {
                           if (err) reject(new Error(`JSON-LD Parsing Error: ${err.message}`));
                           if (quad) solidQuads.push(quad);
@@ -190,6 +203,7 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
               });
             });
 
+            console.log('Parsed Solid Quads:', solidQuads);
             const solidStore = new N3.Store(solidQuads);
             const FOAF = 'http://xmlns.com/foaf/0.1/';
             const VCARD = 'http://www.w3.org/2006/vcard/ns#';
@@ -203,10 +217,10 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
             // Extract Solid social accounts
             const solidLinks = [];
             services.forEach(service => {
-              const predicate = `${FOAF}account`; // Solid PODs may use foaf:account for social accounts
+              const predicate = `${FOAF}account`;
               const accounts = solidStore.getObjects(null, predicate, null);
               accounts.forEach(account => {
-                const accountName = account.id.split('/').pop(); // Extract username from URI
+                const accountName = account.id.split('/').pop();
                 if (account.id.includes(service.urlPrefix)) {
                   solidLinks.push({
                     name: service.name,
@@ -219,6 +233,8 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
               });
             });
 
+            console.log('Extracted Solid Links:', solidLinks);
+
             setSolidData({
               name: solidName || 'No Name Found',
               email: solidEmail,
@@ -227,7 +243,8 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
               links: solidLinks,
             });
           } catch (error) {
-            setSolidError(error.message);
+            console.error('Solid Fetch Error:', error);
+            setSolidError(`Failed to fetch Solid data: ${error.message}`);
           }
         }
 
@@ -369,13 +386,13 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
             className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-gray-700 object-cover"
           />
         )}
-        <h1 className="text-2xl font-bold text-blue-300 mb-6">Profile for {domain}</h1>
+        <h1 className="text-2xl font-bold text-blue-300 mb-6">Contact Card for {domain}</h1>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-gray-200">
             <thead>
               <tr className="bg-gray-800">
-                <th className="p-3">Field</th>
-                <th className="p-3">Value</th>
+                <th className="p-3">Identifier</th>
+                <th className="p-3">Entry</th>
                 <th className="p-3">ADP</th>
                 <th className="p-3">Solid</th>
                 <th className="p-3">Conflict</th>
@@ -401,7 +418,7 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
                             onError={(e) => (e.target.style.display = 'none')}
                           />
                         )}
-                        {row.adpValue.value}
+                        Visit
                       </a>
                     ) : row.solidValue && typeof row.solidValue === 'object' ? (
                       <a
@@ -418,7 +435,7 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
                             onError={(e) => (e.target.style.display = 'none')}
                           />
                         )}
-                        {row.solidValue.value}
+                        Visit
                       </a>
                     ) : (
                       row.adpValue || row.solidValue || '-'
@@ -432,7 +449,7 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
                   </td>
                   <td className="p-3 text-center">
                     {row.hasConflict && (
-                      <span className="text-red-400 font-semibold" title="Values differ between ADP and Solid">
+                      <span className="text-red-400 font-semibold" title="Entries differ between ADP and Solid">
                         ⚠
                       </span>
                     )}
@@ -464,13 +481,13 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
     const tableData = getTableData();
     return (
       <div className="bg-gray-900 p-6 rounded-lg shadow-lg border border-blue-500/30 text-center animate-fade-in">
-        <h2 className="text-2xl font-bold text-blue-300 mb-4">Solid POD Profile</h2>
+        <h2 className="text-2xl font-bold text-blue-300 mb-4">Solid Contact Card</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-gray-200">
             <thead>
               <tr className="bg-gray-800">
-                <th className="p-3">Field</th>
-                <th className="p-3">Value</th>
+                <th className="p-3">Identifier</th>
+                <th className="p-3">Entry</th>
                 <th className="p-3">ADP</th>
                 <th className="p-3">Solid</th>
                 <th className="p-3">Conflict</th>
@@ -496,7 +513,7 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
                             onError={(e) => (e.target.style.display = 'none')}
                           />
                         )}
-                        {row.solidValue.value}
+                        Visit
                       </a>
                     ) : (
                       row.solidValue || row.adpValue || '-'
@@ -510,7 +527,7 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
                   </td>
                   <td className="p-3 text-center">
                     {row.hasConflict && (
-                      <span className="text-red-400 font-semibold" title="Values differ between ADP and Solid">
+                      <span className="text-red-400 font-semibold" title="Entries differ between ADP and Solid">
                         ⚠
                       </span>
                     )}

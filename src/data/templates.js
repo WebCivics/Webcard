@@ -2,10 +2,7 @@ export const agentTypeTemplates = {
     'naturalPerson': {
         types: ['adp:Agent', 'schema:Person'],
         properties: [
-            { id: 1, prefix: 'foaf', property: 'name', value: 'Alex Doe', type: 'literal' },
-            { id: 2, prefix: 'schema', property: 'description', value: 'A personal agent profile for Alex Doe.', type: 'literal' },
-            { id: 3, prefix: 'adp', property: 'hasTwitterAccount', value: 'alexdoe', type: 'literal' },
-            { id: 4, prefix: 'adp', property: 'hasEcashAccount', value: 'ecash:q...', type: 'literal' },
+            { id: 1, prefix: 'foaf', property: 'name', value: '', type: 'literal' }
         ]
     },
     'organization': {

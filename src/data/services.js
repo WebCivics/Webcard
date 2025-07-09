@@ -9,7 +9,7 @@ export const services = [
     predicate: 'adp:hasLinkedinAccount',
     name: 'LinkedIn',
     urlPrefix: 'https://www.linkedin.com/in/',
-    icon: 'https://static.licdn.com/sc/h/akt4ae504epriuy69fpx4cw0a'
+    icon: 'https://www.linkedin.com/favicon.ico'
   },
   {
     predicate: 'adp:hasGithubAccount',

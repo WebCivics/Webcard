@@ -31,14 +31,20 @@ function CreatorView() {
     const activePrefixes = selectedOntologies.map(key => ontologiesDb[key]).filter(Boolean);
     const prefixLines = activePrefixes.map(p => `@prefix ${p.prefix}: <${p.uri}> .`).join('\n');
     const agentTypes = agentTypeTemplates[agentType].types.join(' , ');
-    const propertyLines = properties.filter(p => p.prefix && p.property && p.value).map(p => {
-      const value = p.type === 'uri' ? `<${p.value}>` : `"${p.value.replace(/"/g, '\\"')}"`;
-      return `    ${p.prefix}:${p.property} ${value} ;`;
-    }).join('\n');
-    const trustLines = trusts.filter(t => t.value).map(t => {
-      const trustedAdpUrl = `https://${t.value}/.well-known/adp#this`;
-      return `    adp:trusts <${trustedAdpUrl}> ;`;
-    }).join('\n');
+    const propertyLines = properties
+      .filter(p => p.prefix && p.property && p.value)
+      .map(p => {
+        const value = p.type === 'uri' ? `<${p.value}>` : `"${p.value.replace(/"/g, '\\"')}"${p.type === 'date' ? '^^xsd:date' : ''}`;
+        return `    ${p.prefix}:${p.property} ${value} ;`;
+      })
+      .join('\n');
+    const trustLines = trusts
+      .filter(t => t.value)
+      .map(t => {
+        const trustedAdpUrl = `https://${t.value}/.well-known/adp#this`;
+        return `    adp:trusts <${trustedAdpUrl}> ;`;
+      })
+      .join('\n');
     
     const creationDate = getFormattedDate();
     const dateLine = `    dcterms:created "${creationDate}"^^xsd:date ;`;
@@ -51,7 +57,7 @@ function CreatorView() {
       setDnsRecord({
         type: 'TXT',
         name: '_adp',
-        content: `"adp:signer <${fileUrl}#this> ."`
+        content: `"adp:signer <${fileUrl}#this>"`
       });
     } else {
       setDnsRecord({ type: 'TXT', name: '_adp', content: 'Enter an IPFS CID to generate the full record.' });
@@ -64,7 +70,7 @@ function CreatorView() {
 
   const handleAgentTypeChange = (newType) => {
     setAgentType(newType);
-    setProperties(agentTypeTemplates[newType].properties);
+    setProperties(agentTypeTemplates[newType].properties.map(p => ({ ...p, id: Date.now() + p.id })));
   };
 
   const showMessage = (text, type = 'success') => {
@@ -92,10 +98,13 @@ function CreatorView() {
 
   const handlePropertyChange = (id, field, value) => {
     setProperties(props => props.map(p => p.id === id ? { ...p, [field]: value } : p));
+    if (field === 'prefix' && value) {
+      setProperties(props => props.map(p => p.id === id ? { ...p, property: '' } : p));
+    }
   };
 
   const handleAddProperty = () => {
-    setProperties(props => [...props, { id: Date.now(), prefix: 'adp', property: '', value: '', type: 'literal' }]);
+    setProperties(props => [...props, { id: Date.now(), prefix: '', property: '', value: '', type: 'literal' }]);
   };
 
   const handleRemoveProperty = (id) => {
@@ -134,21 +143,58 @@ function CreatorView() {
         <h2 className="text-2xl font-semibold mb-4 text-blue-300">Step 3: Define Agent Properties</h2>
         <div className="space-y-3 p-4 bg-gray-800/50 rounded-md">
           {properties.map(prop => {
-            const vocabListId = `vocab-list-${prop.id}`;
-            const activeVocab = ontologiesDb[prop.prefix]?.terms || [];
+            const availableProperties = prop.prefix ? ontologiesDb[prop.prefix]?.terms || [] : [];
             return (
               <div key={prop.id} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
-                <datalist id={vocabListId}>
-                  {activeVocab.map(term => <option key={term} value={term} />)}
-                </datalist>
                 <div className="md:col-span-3">
-                  <Select label="Prefix" value={prop.prefix} onChange={e => handlePropertyChange(prop.id, 'prefix', e.target.value)}>
-                    {selectedOntologies.map(key => <option key={key} value={ontologiesDb[key].prefix}>{ontologiesDb[key].prefix}</option>)}
+                  <Select
+                    label="Prefix"
+                    value={prop.prefix}
+                    onChange={e => handlePropertyChange(prop.id, 'prefix', e.target.value)}
+                  >
+                    <option value="">Select</option>
+                    {selectedOntologies.map(key => (
+                      <option key={key} value={ontologiesDb[key].prefix}>
+                        {ontologiesDb[key].prefix}
+                      </option>
+                    ))}
                   </Select>
                 </div>
-                <div className="md:col-span-4"><Input label="Property" value={prop.property} onChange={e => handlePropertyChange(prop.id, 'property', e.target.value)} placeholder="Enter property" listId={vocabListId} /></div>
-                <div className="md:col-span-4"><Input label="Value" value={prop.value} onChange={e => handlePropertyChange(prop.id, 'value', e.target.value)} placeholder="Enter value" /></div>
-                <div className="md:col-span-1"><Button variant="secondary" onClick={() => handleRemoveProperty(prop.id)} className="w-full h-10">×</Button></div>
+                <div className="md:col-span-3">
+                  <Select
+                    label="Property"
+                    value={prop.property}
+                    onChange={e => handlePropertyChange(prop.id, 'property', e.target.value)}
+                    disabled={!prop.prefix}
+                  >
+                    <option value="">Select</option>
+                    {availableProperties.map(term => (
+                      <option key={term} value={term}>{term}</option>
+                    ))}
+                  </Select>
+                </div>
+                <div className="md:col-span-3">
+                  <Select
+                    label="Type"
+                    value={prop.type}
+                    onChange={e => handlePropertyChange(prop.id, 'type', e.target.value)}
+                  >
+                    <option value="literal">Literal</option>
+                    <option value="uri">URI</option>
+                    <option value="date">Date</option>
+                  </Select>
+                </div>
+                <div className="md:col-span-2">
+                  <Input
+                    label="Value"
+                    value={prop.value}
+                    onChange={e => handlePropertyChange(prop.id, 'value', e.target.value)}
+                    placeholder="Enter value"
+                  />
+                </div>
+                <div className="md:col-span-1">
+                  <Button variant="secondary" onClick={() => handleRemoveProperty(prop.id)} className="w-full h-10">×</Button>
+                </div>
               </div>
             );
           })}
@@ -161,8 +207,17 @@ function CreatorView() {
         <div className="space-y-3 p-4 bg-gray-800/50 rounded-md">
           {trusts.map(trust => (
             <div key={trust.id} className="grid grid-cols-12 gap-2 items-end">
-              <div className="col-span-11"><Input label="Trusted Domain Name" value={trust.value} onChange={e => handleTrustChange(trust.id, e.target.value)} placeholder="another-domain.com" /></div>
-              <div className="col-span-1"><Button variant="secondary" onClick={() => handleRemoveTrust(trust.id)} className="w-full h-10">×</Button></div>
+              <div className="col-span-11">
+                <Input
+                  label="Trusted Domain Name"
+                  value={trust.value}
+                  onChange={e => handleTrustChange(trust.id, e.target.value)}
+                  placeholder="another-domain.com"
+                />
+              </div>
+              <div className="col-span-1">
+                <Button variant="secondary" onClick={() => handleRemoveTrust(trust.id)} className="w-full h-10">×</Button>
+              </div>
             </div>
           ))}
           <Button onClick={handleAddTrust} variant="secondary">Add Trusted Agent</Button>
@@ -280,7 +335,11 @@ function App() {
         {activeTab === 'create' && <CreatorView />}
         {activeTab === 'solid' && webId && <ProfileView domain={domain} webId={webId} onReset={handleReset} />}
         <footer className="text-center mt-12 text-gray-500 text-sm">
-          Built with the assistance of an AI assistant.
+          Developed in React with the assistance of{' '}
+          <a href="https://x.ai/grok" className="text-blue-400 hover:underline">xAI Grok 3</a> and{' '}
+          <a href="https://deepmind.google/technologies/gemini/" className="text-blue-400 hover:underline">Google Gemini 2.5 Pro</a>.{' '}
+          Source code available at{' '}
+          <a href="https://github.com/WebCivics/Webcard/" className="text-blue-400 hover:underline">GitHub</a>.
         </footer>
       </div>
     </div>
