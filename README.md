@@ -43,23 +43,24 @@ Follow these steps to get your development environment set up.
 ```bash
 git clone [https://github.com/WebCivics/Webcard.git](https://github.com/WebCivics/Webcard.git)
 cd Webcard
+```
 
 **2\. Install Dependencies:** The `package.json` file in this project is pre-configured with compatible versions of all necessary libraries to avoid dependency conflicts (like `ERESOLVE` errors between `react-scripts` and `@paybutton/react`).
 
 Run the following command to install all the required packages:
 
-Bash  
+```Bash  
 npm install
-
+```
 ---
 
 ## **Running the Development Server**
 
 To run the application locally for development and testing, use the following command:
 
-Bash  
+```Bash  
 npm start
-
+```
 This will start the React development server and automatically open the application in your default web browser, typically at `http://localhost:3000`. The page will automatically reload if you make any changes to the source code.
 
 ---
@@ -80,9 +81,9 @@ The `package.json` is already configured for easy deployment to GitHub Pages.
 
 **1\. Deploy the App:** Run the following command in your terminal. This will build a production version of your app and push it to the `gh-pages` branch on your GitHub repository.
 
-Bash  
+```Bash  
 npm run deploy
-
+```
 **2\. Configure GitHub Repository:** The final step is to tell GitHub to serve your website from the new branch.
 
 * Go to your repository on GitHub.  
