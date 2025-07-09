@@ -1,11 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css'; // Imports Tailwind CSS styles
+import './index.css'; // This file contains the Tailwind CSS directives
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
-// This is the standard entry point for a React 17 application.
-// It finds the 'root' div in your public/index.html file and renders your main App component inside it.
+// Using the render method for React 17, which is installed by react-scripts@4.0.3
 ReactDOM.render(
   <React.StrictMode>
     <App />
