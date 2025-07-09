@@ -1,6 +1,6 @@
 {
   "name": "webcard-viewer",
-  "homepage": "https://webcivics.github.io/Webcard",
+  "homepage": "https://<YOUR_GITHUB_USERNAME>.github.io/<YOUR_REPOSITORY_NAME>",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

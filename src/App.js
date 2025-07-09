@@ -43,8 +43,9 @@ const adpParser = (turtleText) => {
             } else {
                 // Parsing is complete
                 const profile = { name: null, domain: null, ecash: null, properties: [] };
-                const subject = store.getSubjects(null, null, null)[0];
-                if (!subject) return reject(new Error("No subject found in RDF data."));
+                const subjects = store.getSubjects(null, null, null);
+                if (subjects.length === 0) return reject(new Error("No subject found in RDF data."));
+                const subject = subjects[0];
 
                 const quads = store.getQuads(subject, null, null);
                 quads.forEach(q => {
@@ -246,10 +247,16 @@ function App() {
     const [view, setView] = useState('profile'); // 'profile' or 'ecash'
 
     useEffect(() => {
-        const pathParts = window.location.pathname.split('/').filter(p => p && p.toLowerCase() !== 'webcard');
-        const queryParams = new URLSearchParams(window.location.search);
+        // Get the full path and remove any leading/trailing slashes
+        const path = window.location.pathname.replace(/^\/|\/$/g, ''); 
         
-        const potentialDomain = pathParts.pop();
+        // Split the path into segments
+        const pathParts = path.split('/').filter(p => p); 
+        
+        // The domain should be the last part of the path
+        const potentialDomain = pathParts.pop(); 
+
+        const queryParams = new URLSearchParams(window.location.search);
 
         if (potentialDomain && potentialDomain.includes('.')) {
             setDomain(potentialDomain);
@@ -263,8 +270,11 @@ function App() {
     }, []);
 
     const handleDomainSubmit = (submittedDomain) => {
-        // Update the URL to reflect the new domain, which will trigger a re-render
-        window.location.pathname = `/Webcard/${submittedDomain}`;
+        // Construct the new path relative to the current page.
+        // This is more robust for GitHub pages deployment.
+        const newPath = `${window.location.pathname.replace(/[^/]*$/, '')}${submittedDomain}`;
+        window.history.pushState({}, '', newPath);
+        setDomain(submittedDomain);
     };
 
     // Main rendering logic
