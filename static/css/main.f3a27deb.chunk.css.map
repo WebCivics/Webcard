@@ -1,0 +1,1 @@
+{"version":3,"sources":["webpack://src/index.css"],"names":[],"mappings":"AAAA,cAAc,CACd,oBAAoB,CACpB,mBAAmB,CAEnB,KACI,kDAA6D,CAC7D,8BACJ","file":"main.f3a27deb.chunk.css","sourcesContent":["@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\nbody {\n    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n    font-family: 'Inter', sans-serif;\n}\n"]}
