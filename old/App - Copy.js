@@ -14,7 +14,7 @@ function CreatorView() {
   const [trusts, setTrusts] = useState([]);
   const [userProvidedCid, setUserProvidedCid] = useState('');
   const [ontologiesDb] = useState(initialOntologiesDb);
-  const selectedOntologies = ['adp', 'foaf', 'schema', 'dcterms', 'vc', 'xsd'];
+  const [selectedOntologies, setSelectedOntologies] = useState(['adp', 'foaf', 'schema', 'dcterms', 'vc', 'xsd']);
   const [rdfOutput, setRdfOutput] = useState('');
   const [dnsRecord, setDnsRecord] = useState({ type: '', name: '', content: '' });
   const [message, setMessage] = useState(null);
@@ -66,7 +66,7 @@ function CreatorView() {
 
   useEffect(() => {
     generateOutputs();
-  }, [properties, domainName, agentType, trusts, selectedOntologies, userProvidedCid, generateOutputs]);
+  }, [properties, domainName, agentType, trusts, selectedOntologies, userProvidedCid]);
 
   const handleAgentTypeChange = (newType) => {
     setAgentType(newType);

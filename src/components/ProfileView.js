@@ -386,7 +386,7 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
             className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-gray-700 object-cover"
           />
         )}
-        <h1 className="text-2xl font-bold text-blue-300 mb-6">Contact Card for {domain}</h1>
+        <h1 className="text-2xl font-bold text-blue-300 mb-6">WebCard for {domain}</h1>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-gray-200">
             <thead>
