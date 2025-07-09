@@ -11,11 +11,13 @@ import ProfileView from './components/ProfileView';
 function App() {
   const [domain, setDomain] = useState('');
 
-  // This effect still runs once on mount to handle direct links
+  // This effect runs once on mount to handle direct links
   useEffect(() => {
     const path = window.location.pathname;
     // This logic gets the last part of the URL path, which will be the domain
-    const potentialDomain = path.split('/').filter(Boolean).pop();
+    // It correctly handles the base path of the repo (e.g., /Webcard/)
+    const pathSegments = path.split('/').filter(Boolean);
+    const potentialDomain = pathSegments[pathSegments.length - 1];
 
     if (potentialDomain) {
       // A simple check to avoid treating the repo name ('Webcard') as a domain
@@ -27,20 +29,14 @@ function App() {
 
   // This handler is passed to the DomainForm to update the state
   const handleDomainSubmit = (submittedDomain) => {
-    // Update the state to show the ProfileView
+    // Update the state to show the ProfileView without changing the URL
     setDomain(submittedDomain);
-    // Optionally, update the URL without reloading the page
-    const basename = window.location.pathname.includes('/Webcard') ? '/Webcard' : '';
-    const newPath = `${basename}/${encodeURIComponent(submittedDomain)}`;
-    window.history.pushState({ domain: submittedDomain }, '', newPath);
   };
 
   // This handler is passed to the ProfileView to allow resetting the app
   const handleReset = () => {
+    // Reset the state to show the DomainForm
     setDomain('');
-    const basename = window.location.pathname.includes('/Webcard') ? '/Webcard' : '';
-    const rootPath = `${basename}/`;
-    window.history.pushState({}, '', rootPath);
   };
 
   return (
