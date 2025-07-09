@@ -1,70 +1,110 @@
-# Getting Started with Create React App
+# WebCard Utility
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+The WebCard Utility is a React-based single-page application (SPA) that allows users to view and create Agent Discovery Protocol (ADP) profiles, with support for Solid POD integration. It combines the functionality of the `WebCard Viewer` (for viewing ADP profiles) and the `IPFS-ADP` project (for creating ADP records). The app is deployed on GitHub Pages and uses a Tailwind CSS-based UI with a modern, responsive design.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **View Tab**:
+  - Look up ADP profiles by domain (e.g., `sailingdigital.com`) using DNS TXT records and IPFS-hosted Turtle data.
+  - Displays profile information: name, image, social accounts (e.g., Twitter, LinkedIn, GitHub), eCash address, and WebID (if available).
+  - Social accounts are configured via `src/data/services.js`, with customizable display names, URL patterns, and icons.
+  - Supports API-like queries for specific fields (e.g., `?domain=sailingdigital.com&field=adp:hasEcashAccount&format=json`).
+  - Includes a button to send access requests to a Solid POD's inbox if a WebID is present.
+  - Shows raw ADP Turtle data for transparency.
 
-### `npm start`
+- **Create Tab**:
+  - Generate ADP Turtle files for domains, with customizable agent types (e.g., Natural Person, Organization) and properties.
+  - Supports adding trusted domains for a web of trust.
+  - Generates DNS TXT records for IPFS CIDs.
+  - Allows copying RDF or downloading as `adp.ttl`.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Solid Tab**:
+  - Displays public Solid POD data (name, email, homepage) for a WebID found in the ADP profile.
+  - Supports Turtle and JSON-LD formats, parsed with `n3.js`.
+  - Includes a button to send access requests to the POD's inbox.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Prerequisites
 
-### `npm test`
+- Node.js (v14 or later) and npm.
+- A domain with a configured `_adp.<domain>` TXT record pointing to an IPFS-hosted ADP Turtle file (for viewing).
+- Access to an IPFS pinning service or node (for creating/uploading ADP files).
+- Optional: A Solid POD with a WebID (e.g., `https://id.inrupt.com/ubiquitous`) for Solid tab testing.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Setup
 
-### `npm run build`
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/WebCivics/Webcard.git
+   cd Webcard
+   ```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+2. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+3. **Configure Tailwind CSS** (if not already present):
+   ```bash
+   npx tailwindcss init
+   ```
+   Ensure `tailwind.config.js` includes:
+   ```javascript
+   module.exports = {
+     content: ['./src/**/*.{js,jsx,ts,tsx}', './public/index.html'],
+     theme: {
+       extend: {
+         keyframes: {
+           'fade-in': {
+             '0%': { opacity: '0' },
+             '100%': { opacity: '1' },
+           },
+         },
+         animation: {
+           'fade-in': 'fade-in 0.5s ease-in-out',
+         },
+       },
+     },
+     plugins: [],
+   };
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+4. **Run the Development Server**:
+   ```bash
+   npm start
+   ```
+   The app will be available at `http://localhost:3000`.
 
-### `npm run eject`
+5. **Deploy to GitHub Pages**:
+   - Update `package.json` with the correct `homepage`:
+     ```json
+     "homepage": "https://webcivics.github.io/Webcard"
+     ```
+   - Deploy:
+     ```bash
+     npm run deploy
+     ```
+   - Configure GitHub Pages in the repository settings to use the `gh-pages` branch.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Usage
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### View Tab
+- **Access**: Default tab at `http://localhost:3000`.
+- **Input**: Enter a domain (e.g., `sailingdigital.com`) and click "Look Up".
+- **Output**:
+  - Profile name, image, eCash address, and WebID (if available).
+  - Social accounts (e.g., Twitter, LinkedIn) as clickable buttons with icons, configured in `src/data/services.js`.
+  - Raw ADP Turtle data.
+  - A "Send Access Request" button for Solid PODs if a WebID is present.
+- **API Queries**:
+  - JSON: `http://localhost:3000/?domain=sailingdigital.com&field=adp:hasEcashAccount`
+    - Output: `{"adp:hasEcashAccount":"ecash:q123..."}`
+  - Turtle: `http://localhost:3000/?domain=sailingdigital.com&field=foaf:name&format=turtle`
+    - Output: `<#this> foaf:name "Alex Doe" .`
+  - eCash: `http://localhost:3000/?domain=sailingdigital.com&ecash`
+    - Output: `{"eCashAddress":"ecash:q123..."}`
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Create Tab
+- **Access**: Click the "Create" tab.
+- **Steps**:
+  1. Enter a domain (e.g., `your-domain.com`).
+  2. Select an agent type (

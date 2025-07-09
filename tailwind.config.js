@@ -1,6 +1,6 @@
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-  purge: ['./src/**/*.{js,jsx,ts,tsx}', './public/index.html'],
-  darkMode: false,
+  content: ['./src/**/*.{js,jsx,ts,tsx}', './public/index.html'],
   theme: {
     extend: {
       keyframes: {
@@ -11,11 +11,8 @@ module.exports = {
       },
       animation: {
         'fade-in': 'fade-in 0.5s ease-in-out',
-      }
+      },
     },
-  },
-  variants: {
-    extend: {},
   },
   plugins: [],
 };
