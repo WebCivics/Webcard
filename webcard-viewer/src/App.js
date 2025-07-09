@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Parser, Store } from 'n3';
-import { PayButton } from '@paybutton/react';
+import { PayButton } from '@paybutton/react'; // CORRECTED: Import from the React-specific package
 
 // --- Configuration for Social Links ---
 // This object defines how to render different ADP properties.
@@ -260,30 +260,37 @@ function App() {
         } else {
             setView('profile');
         }
-    }, []);
-
-    const handleDomainSubmit = (submittedDomain) => {
-        // Update the URL to reflect the new domain, which will trigger a re-render
-        window.location.pathname = `/Webcard/${submittedDomain}`;
-    };
-
-    // Main rendering logic
-    if (view === 'ecash') {
+        }, []);
+    
         return (
-            <div className="min-h-screen flex items-center justify-center p-4">
-                <JsonView domain={domain} />
+            <div className="min-h-screen bg-gradient-to-br from-[#232526] to-[#764ba2] flex flex-col items-center justify-center">
+                {!domain ? (
+                    <DomainInput onDomainSubmit={setDomain} />
+                ) : (
+                    <div className="w-full max-w-2xl mx-auto">
+                        <div className="flex justify-center mb-6">
+                            <button
+                                className={`px-6 py-2 rounded-l-lg font-bold ${view === 'profile' ? 'bg-white/30 text-white' : 'bg-black/10 text-gray-300'}`}
+                                onClick={() => setView('profile')}
+                            >
+                                Profile
+                            </button>
+                            <button
+                                className={`px-6 py-2 rounded-r-lg font-bold ${view === 'ecash' ? 'bg-white/30 text-white' : 'bg-black/10 text-gray-300'}`}
+                                onClick={() => setView('ecash')}
+                            >
+                                Ecash
+                            </button>
+                        </div>
+                        {view === 'profile' ? (
+                            <Profile domain={domain} />
+                        ) : (
+                            <JsonView domain={domain} />
+                        )}
+                    </div>
+                )}
             </div>
         );
     }
-
-    return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-4">
-            {domain ? <Profile domain={domain} /> : <DomainInput onDomainSubmit={handleDomainSubmit} />}
-            <footer className="text-center text-white/70 mt-8 text-sm">
-                <p>Powered by WebCivics ADP</p>
-            </footer>
-        </div>
-    );
-}
-
-export default App;
+    
+    export default App;
