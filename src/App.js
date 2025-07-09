@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import './App.css';
 import DomainForm from './components/DomainForm';
 import ProfileView from './components/ProfileView';
 
