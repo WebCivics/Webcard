@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
 
-/**
- * DomainForm Component
- * Calls the onDomainSubmit prop to let the parent App component handle navigation.
- */
 function DomainForm({ onDomainSubmit }) {
   const [inputValue, setInputValue] = useState('');
 

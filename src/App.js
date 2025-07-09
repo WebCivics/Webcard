@@ -3,33 +3,25 @@ import './App.css';
 import DomainForm from './components/DomainForm';
 import ProfileView from './components/ProfileView';
 
-/**
- * Main App Component
- * Uses URL query parameters (?domain=...) to manage state, which is a robust
- * pattern for static hosting like GitHub Pages.
- */
 function App() {
   const [domain, setDomain] = useState('');
 
-  // On initial component mount, read the domain from the URL query
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     const domainFromQuery = queryParams.get('domain');
     if (domainFromQuery) {
       setDomain(domainFromQuery);
     }
-  }, []); // Empty dependency array ensures this runs only once
+  }, []);
 
-  // This handler reloads the page with the new query parameter
   const handleDomainSubmit = (submittedDomain) => {
-    const baseUrl = window.location.href.split('?')[0];
+    const baseUrl = window.location.pathname;
     const newUrl = `${baseUrl}?domain=${encodeURIComponent(submittedDomain)}`;
     window.location.href = newUrl;
   };
 
-  // This handler resets the app by navigating to the base URL
   const handleReset = () => {
-    const baseUrl = window.location.href.split('?')[0];
+    const baseUrl = window.location.pathname;
     window.location.href = baseUrl;
   };
 

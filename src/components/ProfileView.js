@@ -2,30 +2,22 @@ import React, { useState, useEffect } from 'react';
 import N3 from 'n3';
 import { PayButton } from '@paybutton/react';
 
-/**
- * ProfileView Component
- * This is the core of the application. It takes a domain, fetches the data,
- * parses it, and renders the profile card or an error/loading state.
- */
-function ProfileView({ domain }) {
+function ProfileView({ domain, onReset }) {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isEcashView, setIsEcashView] = useState(false);
 
     useEffect(() => {
-        // Check for ?ecash query parameter in the URL
         const queryParams = new URLSearchParams(window.location.search);
-        if (queryParams.has('ecash')) {
-            setIsEcashView(true);
-        }
+        setIsEcashView(queryParams.has('ecash'));
 
         const fetchProfile = async () => {
-            try {
-                setLoading(true);
-                setError(null);
+            setLoading(true);
+            setError(null);
+            setProfile(null);
 
-                // Step 1: Use DNS-over-HTTPS (DoH) to get the TXT record for _adp.<domain>
+            try {
                 const dohResponse = await fetch(`https://cloudflare-dns.com/dns-query?name=_adp.${domain}&type=TXT`, {
                     headers: { 'accept': 'application/dns-json' },
                 });
@@ -35,21 +27,18 @@ function ProfileView({ domain }) {
                 const txtRecord = dohData.Answer?.find(ans => ans.type === 16)?.data.replace(/"/g, '');
                 if (!txtRecord) throw new Error(`No ADP TXT record found for ${domain}.`);
 
-                // Step 2: Extract the IPFS Content Identifier (CID) from the TXT record
                 const cidMatch = txtRecord.match(/ipfs=([a-zA-Z0-9]+)/);
                 if (!cidMatch || !cidMatch[1]) throw new Error('Could not find a valid IPFS CID in the TXT record.');
                 const cid = cidMatch[1];
 
-                // Step 3: Fetch the profile data from a public IPFS gateway
                 const ipfsResponse = await fetch(`https://ipfs.io/ipfs/${cid}`);
                 if (!ipfsResponse.ok) throw new Error('Failed to fetch data from IPFS gateway.');
                 const turtleData = await ipfsResponse.text();
 
-                // Step 4: Parse the Turtle (RDF) data using N3.js
                 const parser = new N3.Parser();
                 const quads = [];
                 await new Promise((resolve, reject) => {
-                    parser.parse(turtleData, (err, quad, prefixes) => {
+                    parser.parse(turtleData, (err, quad) => {
                         if (err) return reject(new Error(`RDF Parsing Error: ${err.message}`));
                         if (quad) {
                             quads.push(quad);
@@ -119,9 +108,12 @@ function ProfileView({ domain }) {
             <div className="bg-red-900 border border-red-500 text-red-200 px-4 py-3 rounded-md w-full max-w-lg text-center">
                 <h2 className="font-bold text-lg mb-2">Error</h2>
                 <p>{error}</p>
-                <a href="/" className="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md mt-4 transition-colors">
+                <button
+                  onClick={onReset}
+                  className="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md mt-4 transition-colors"
+                >
                     Try Again
-                </a>
+                </button>
             </div>
         );
     }
