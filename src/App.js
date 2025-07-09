@@ -5,38 +5,32 @@ import ProfileView from './components/ProfileView';
 
 /**
  * Main App Component
- * This component now manages the view (form or profile) using internal state
- * to avoid full-page reloads that break GitHub Pages routing.
+ * Uses URL query parameters (?domain=...) to manage state, which is a robust
+ * pattern for static hosting like GitHub Pages.
  */
 function App() {
   const [domain, setDomain] = useState('');
 
-  // This effect runs once on mount to handle direct links
+  // On initial component mount, read the domain from the URL query
   useEffect(() => {
-    const path = window.location.pathname;
-    // This logic gets the last part of the URL path, which will be the domain
-    // It correctly handles the base path of the repo (e.g., /Webcard/)
-    const pathSegments = path.split('/').filter(Boolean);
-    const potentialDomain = pathSegments[pathSegments.length - 1];
-
-    if (potentialDomain) {
-      // A simple check to avoid treating the repo name ('Webcard') as a domain
-      if (potentialDomain.toLowerCase() !== 'webcard') {
-        setDomain(decodeURIComponent(potentialDomain));
-      }
+    const queryParams = new URLSearchParams(window.location.search);
+    const domainFromQuery = queryParams.get('domain');
+    if (domainFromQuery) {
+      setDomain(domainFromQuery);
     }
-  }, []); // Empty dependency array means this runs once on mount
+  }, []); // Empty dependency array ensures this runs only once
 
-  // This handler is passed to the DomainForm to update the state
+  // This handler reloads the page with the new query parameter
   const handleDomainSubmit = (submittedDomain) => {
-    // Update the state to show the ProfileView without changing the URL
-    setDomain(submittedDomain);
+    const baseUrl = window.location.href.split('?')[0];
+    const newUrl = `${baseUrl}?domain=${encodeURIComponent(submittedDomain)}`;
+    window.location.href = newUrl;
   };
 
-  // This handler is passed to the ProfileView to allow resetting the app
+  // This handler resets the app by navigating to the base URL
   const handleReset = () => {
-    // Reset the state to show the DomainForm
-    setDomain('');
+    const baseUrl = window.location.href.split('?')[0];
+    window.location.href = baseUrl;
   };
 
   return (

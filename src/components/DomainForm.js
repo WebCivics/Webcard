@@ -2,17 +2,15 @@ import React, { useState } from 'react';
 
 /**
  * DomainForm Component
- * Renders a simple form for the user to enter a domain name.
- * On submit, it reloads the page to the corresponding path.
+ * Calls the onDomainSubmit prop to let the parent App component handle navigation.
  */
-function DomainForm() {
+function DomainForm({ onDomainSubmit }) {
   const [inputValue, setInputValue] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (inputValue) {
-      // Redirect the browser to the new URL to trigger the ProfileView
-      window.location.pathname = `/${encodeURIComponent(inputValue)}`;
+      onDomainSubmit(inputValue);
     }
   };
 
