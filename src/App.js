@@ -32,7 +32,7 @@ function App() {
       ) : (
         <DomainForm onDomainSubmit={handleDomainSubmit} />
       )}
-       <footer className="absolute bottom-4 text-gray-500 text-sm">
+      <footer className="absolute bottom-4 text-gray-500 text-sm">
         Built with the assistance of an AI assistant.
       </footer>
     </div>
