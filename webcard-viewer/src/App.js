@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Parser, Store } from 'n3';
-import { PayButton } from '@paybutton/react'; // CORRECTED: Import from the React-specific package
+import { PayButton } from '@paybutton/react';
 
 // --- Configuration for Social Links ---
 // This object defines how to render different ADP properties.
