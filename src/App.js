@@ -14,7 +14,7 @@ function CreatorView() {
   const [trusts, setTrusts] = useState([]);
   const [userProvidedCid, setUserProvidedCid] = useState('');
   const [ontologiesDb] = useState(initialOntologiesDb);
-  const selectedOntologies = ['adp', 'foaf', 'schema', 'dcterms', 'vc', 'xsd'];
+  const selectedOntologies = React.useMemo(() => ['adp', 'foaf', 'schema', 'dcterms', 'vc', 'xsd'], []);
   const [rdfOutput, setRdfOutput] = useState('');
   const [dnsRecord, setDnsRecord] = useState({ type: '', name: '', content: '' });
   const [message, setMessage] = useState(null);
@@ -27,7 +27,7 @@ function CreatorView() {
     return `${year}-${month}-${day}`;
   };
 
-  const generateOutputs = () => {
+  const generateOutputs = React.useCallback(() => {
     const activePrefixes = selectedOntologies.map(key => ontologiesDb[key]).filter(Boolean);
     const prefixLines = activePrefixes.map(p => `@prefix ${p.prefix}: <${p.uri}> .`).join('\n');
     const agentTypes = agentTypeTemplates[agentType].types.join(' , ');
@@ -62,7 +62,7 @@ function CreatorView() {
     } else {
       setDnsRecord({ type: 'TXT', name: '_adp', content: 'Enter an IPFS CID to generate the full record.' });
     }
-  };
+  }, [selectedOntologies, ontologiesDb, agentType, properties, trusts, userProvidedCid, domainName]);
 
   useEffect(() => {
     generateOutputs();

@@ -5,6 +5,10 @@ import { services } from '../data/services';
 
 function ProfileView({ domain, webId, onReset, setWebId }) {
   const [status, setStatus] = useState('idle'); // idle, loading, found, error
+  // ...existing code...
+  const [usingCorsProxy, setUsingCorsProxy] = useState(false);
+  const [cid, setCid] = useState('');
+  const [currentGateway, setCurrentGateway] = useState('');
   const [profileData, setProfileData] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [isEcashView, setIsEcashView] = useState(false);
@@ -19,7 +23,7 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
     setFieldView(queryParams.get('field'));
     setOutputFormat(queryParams.get('format')?.toLowerCase() || 'json');
 
-    const fetchProfile = async () => {
+  const fetchProfile = async () => {
       setStatus('loading');
       setProfileData(null);
       setErrorMessage('');
@@ -49,15 +53,77 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
         if (!cidMatch) {
           throw new Error('Could not extract a valid IPFS CID from the ADP URL.');
         }
-        const cid = cidMatch[1];
-        const ipfsGatewayUrl = `https://ipfs.io/ipfs/${cid}`;
+        const foundCid = cidMatch[1];
+        setCid(foundCid);
+        const cid = foundCid;
 
-        // Step 3: Fetch IPFS content
-        const ipfsResponse = await fetch(ipfsGatewayUrl);
-        if (!ipfsResponse.ok) {
-          throw new Error(`Failed to fetch from IPFS gateway (status: ${ipfsResponse.status})`);
+        // Step 3: Fetch IPFS content with gateway fallback
+        async function fetchFromIpfs(cid) {
+          const gateways = [
+            `https://ipfs.io/ipfs/${cid}`,
+            `https://cloudflare-ipfs.com/ipfs/${cid}`,
+            `https://gateway.pinata.cloud/ipfs/${cid}`,
+            `https://4everland.io/ipfs/${cid}`,
+            `https://dlunar.net/ipfs/${cid}`,
+            `https://dweb.link/ipfs/${cid}`,
+            `https://trustless-gateway.link/ipfs/${cid}`
+          ];
+          for (const url of gateways) {
+            try {
+              setCurrentGateway(url);
+              setUsingCorsProxy(false);
+              console.info(`[IPFS] Attempting fetch for CID: ${cid} at gateway: ${url}`);
+              const res = await fetch(url);
+              if (res.ok) {
+                console.info(`[IPFS] Success for CID: ${cid} at gateway: ${url}`);
+                setCurrentGateway('');
+                return await res.text();
+              } else {
+                // If status is 0, possible CORS error
+                if (res.status === 0) {
+                  console.warn(`[IPFS] Possible CORS error for CID: ${cid} at gateway: ${url}. Retrying with CORS proxy.`);
+                  setUsingCorsProxy(true);
+                  const corsProxyUrl = `https://corsproxy.io/?${url}`;
+                  setCurrentGateway(corsProxyUrl);
+                  try {
+                    const corsRes = await fetch(corsProxyUrl);
+                    if (corsRes.ok) {
+                      setCurrentGateway('');
+                      return await corsRes.text();
+                    }
+                  } catch (corsErr) {
+                    console.error(`[IPFS] CORS proxy failed for CID: ${cid} at gateway: ${url}`, corsErr);
+                  }
+                }
+                console.warn(`[IPFS] Gateway responded but not OK for CID: ${cid} at gateway: ${url} (status: ${res.status})`);
+              }
+            } catch (e) {
+              // Detect CORS error by error name/message
+              if (e.name === 'TypeError' && e.message && e.message.includes('NetworkError')) {
+                console.warn(`[IPFS] NetworkError (possible CORS) for CID: ${cid} at gateway: ${url}. Retrying with CORS proxy.`);
+                setUsingCorsProxy(true);
+                const corsProxyUrl = `https://corsproxy.io/?${url}`;
+                setCurrentGateway(corsProxyUrl);
+                try {
+                  const corsRes = await fetch(corsProxyUrl);
+                  if (corsRes.ok) {
+                    setCurrentGateway('');
+                    return await corsRes.text();
+                  }
+                } catch (corsErr) {
+                  console.error(`[IPFS] CORS proxy failed for CID: ${cid} at gateway: ${url}`, corsErr);
+                }
+              } else {
+                console.error(`[IPFS] Error fetching CID: ${cid} at gateway: ${url}`, e);
+              }
+              // Try next gateway
+            }
+          }
+          setCurrentGateway('');
+          setUsingCorsProxy(false);
+          throw new Error('Failed to fetch from all IPFS gateways');
         }
-        const content = await ipfsResponse.text();
+        const content = await fetchFromIpfs(cid);
 
         // Step 4: Parse Turtle data with n3.js
         const parser = new N3.Parser();
@@ -361,6 +427,15 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
       <div className="bg-gray-900 p-6 rounded-lg shadow-lg text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
         <p className="text-gray-400">Fetching profile for <span className="font-bold">{domain}</span>...</p>
+        {currentGateway && (
+          <p className="text-blue-400 mt-2 text-sm">Checking IPFS gateway:<br /><span className="font-mono">{currentGateway}</span></p>
+        )}
+        {usingCorsProxy && (
+          <div className="mt-2 text-yellow-400 text-sm">
+            <strong>Note:</strong> Using a CORS proxy to access IPFS gateway due to cross-origin restrictions.<br />
+            This may be slower or less reliable.
+          </div>
+        )}
       </div>
     );
   }
@@ -387,6 +462,12 @@ function ProfileView({ domain, webId, onReset, setWebId }) {
           />
         )}
         <h1 className="text-2xl font-bold text-blue-300 mb-6">WebCard for {domain}</h1>
+        {cid && (
+          <div className="mb-4">
+            <span className="text-sm text-gray-400">IPFS CID from DNS: </span>
+            <span className="font-mono text-blue-400">{cid}</span>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-gray-200">
             <thead>
